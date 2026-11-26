@@ -55,8 +55,8 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
   contain: layout paint; backface-visibility: hidden; transform: translateZ(0);
 }
 .screen.anim { will-change: transform; }
-.screen .dim { position: absolute; inset: 0; z-index: 50; background: #000; opacity: 0; pointer-events: none; will-change: opacity; }
-.screen.raised { box-shadow: -8px 0 24px rgba(0, 0, 0, .18); }
+
+.screen.raised.anim { box-shadow: -8px 0 24px rgba(0, 0, 0, .18); }
 
 /* ---------- Barra de navegação ---------- */
 .nav {

@@ -75,7 +75,7 @@
     S[b.parentNode.dataset.seg] = b.dataset.val;
     applySettings(); syncSheet();
   });
-  $sheet.querySelector('[data-sw="eye"]').addEventListener('change', function (e) { S.eye = e.target.checked; applySettings(); syncSheet(); });
+  ($sheet.querySelector('[data-sw="eye"]')||document.createElement('input')).addEventListener('change', function (e) { S.eye = e.target.checked; applySettings(); syncSheet(); });
   $sheet.querySelector('[data-range="eyeLevel"]').addEventListener('input', function (e) { S.eyeLevel = +e.target.value; applySettings(); });
   document.getElementById('sheet-done').addEventListener('click', closeSheet);
   $backdrop.addEventListener('click', closeSheet);
@@ -258,7 +258,7 @@
   }
 
   /* ---------- roteador com transições estilo iOS ---------- */
-  var stack = [];
+  var current = null, busy = null;
 
   function parse() {
     var h = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
@@ -270,70 +270,79 @@
   }
   function keyOf(r) { return r.name + ':' + (r.work || '') + ':' + (r.chap || ''); }
   function build(r) {
-    var v = r.name === 'reader' ? buildReader(r) : r.name === 'series' ? buildSeries(r) : buildLibrary();
-    if (v) { v.r = r; v.key = keyOf(r); if (r.depth > 0) v.el.classList.add('raised'); }
+    var v = null;
+    try { v = r.name === 'reader' ? buildReader(r) : r.name === 'series' ? buildSeries(r) : buildLibrary(); } catch (e) { console.error(e); }
+    if (v) { v.r = r; v.key = keyOf(r); }
     return v;
   }
   function setTitle(r) {
     var w = r.work && workOf(r.work), c = w && r.chap && chapOf(w, r.chap);
     document.title = c ? w.title + ' · Cap. ' + c.number : w ? w.title : 'Biblioteca';
   }
-  function run(el, frames, opts) {
-    el.classList.add('anim');
-    return el.animate(frames, Object.assign({ duration: DUR, easing: EASE, fill: 'both' }, opts)).finished.then(function () { el.classList.remove('anim'); });
+  function mountSafe(v) { try { v.mount(); } catch (e) { console.error(e); } }
+
+  // termina na hora qualquer transição em andamento
+  function finishBusy() { if (busy) { var f = busy; busy = null; f(); } }
+  // garante que só a tela atual fique no app
+  function cleanup() {
+    [].slice.call($app.children).forEach(function (n) { if (!current || n !== current.el) n.remove(); });
+    if (current) { current.el.getAnimations().forEach(function (a) { a.cancel(); }); current.el.style.transform = ''; current.el.classList.remove('anim'); }
   }
-  function dimOf(el) { var d = el.querySelector(':scope > .dim'); if (!d) { d = document.createElement('div'); d.className = 'dim'; el.appendChild(d); } return d; }
-  function slideUnder(el, from, to) {
-    var d = dimOf(el);
-    d.style.top = el.scrollTop + 'px'; d.style.height = el.clientHeight + 'px'; d.style.bottom = 'auto';
-    d.animate([{ opacity: from * .22 }, { opacity: to * .22 }], { duration: DUR, easing: EASE, fill: 'both' });
-    return run(el, [{ transform: 'translate3d(' + (-28 * from) + '%,0,0)' }, { transform: 'translate3d(' + (-28 * to) + '%,0,0)' }]);
+
+  function animate(el, from, to, dur) {
+    el.classList.add('anim');
+    return el.animate([{ transform: from }, { transform: to }], { duration: dur || DUR, easing: EASE, fill: 'forwards' });
+  }
+  function shade(el, a, b) {
+    var d = document.createElement('div');
+    d.className = 'dim';
+    d.style.cssText = 'position:fixed;inset:0;z-index:5;background:#000;pointer-events:none';
+    el.parentNode.insertBefore(d, el.nextSibling);
+    d.animate([{ opacity: a }, { opacity: b }], { duration: DUR, easing: EASE, fill: 'forwards' });
+    return d;
   }
 
   function go() {
-    var r = parse(), top = stack[stack.length - 1];
-    if (top && top.key === keyOf(r)) return;
+    finishBusy();
+    var r = parse();
+    if (current && current.key === keyOf(r)) return;
     var view = build(r);
     if (!view) { location.replace('#/'); return; }
     setTitle(r);
+    var prev = current;
+    current = view;
 
-    if (!top) {
-      stack.push(view); $app.appendChild(view.el); view.mount();
+    if (!prev) { $app.appendChild(view.el); mountSafe(view); return; }
+
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var done = function () { cleanup(); };
+
+    if (reduce || r.depth === prev.r.depth) {             // mesma profundidade: troca suave
+      $app.appendChild(view.el); mountSafe(view);
+      var f = view.el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: reduce ? 1 : 260, easing: 'ease-out' });
+      busy = done; f.finished.then(function () { if (busy === done) finishBusy(); }, function () {});
       return;
     }
 
-    if (r.depth > top.r.depth) {                       // avançar (push)
-      stack.push(view); $app.appendChild(view.el); view.mount();
-      slideUnder(top.el, 0, 1);
-      run(view.el, [{ transform: 'translate3d(100%,0,0)' }, { transform: 'translate3d(0,0,0)' }]).then(function () {
-        view.el.getAnimations().forEach(function (a) { a.cancel(); });
-        top.el.getAnimations().forEach(function (a) { a.cancel(); });
-        top.el.style.visibility = 'hidden';
-      });
-    } else if (r.depth < top.r.depth) {                // voltar (pop)
-      var under = null;
-      for (var i = stack.length - 2; i >= 0; i--) { if (stack[i].key === view.key) { under = stack[i]; break; } }
-      if (under) { view = under; }
-      else { $app.insertBefore(view.el, top.el); view.mount(); }
-      var keep = stack.filter(function (s) { return s.r.depth < r.depth; });
-      if (keep.indexOf(view) === -1) keep.push(view);
-      stack = keep.concat(top);                         // top sai logo depois da animação
-      view.el.style.visibility = '';
-      slideUnder(view.el, 1, 0);
-      run(top.el, [{ transform: 'translate3d(0,0,0)' }, { transform: 'translate3d(100%,0,0)' }]).then(function () {
-        top.el.remove();
-        stack = stack.filter(function (s) { return s !== top; });
-        view.el.getAnimations().forEach(function (a) { a.cancel(); });
-        var d = view.el.querySelector(':scope > .dim'); if (d) d.getAnimations().forEach(function (a) { a.cancel(); });
-      });
-    } else {                                            // troca no mesmo nível (próximo capítulo)
-      stack[stack.length - 1] = view;
-      $app.appendChild(view.el); view.mount();
-      run(view.el, [{ opacity: 0 }, { opacity: 1 }], { duration: 300 }).then(function () {
-        view.el.getAnimations().forEach(function (a) { a.cancel(); });
-        top.el.remove();
-      });
+    var forward = r.depth > prev.r.depth;
+    var a1, a2, sh;
+    if (forward) {                                        // avançar (entra pela direita)
+      view.el.style.zIndex = 10; view.el.classList.add('raised');
+      $app.appendChild(view.el); mountSafe(view);
+      sh = shade(prev.el, 0, .25);
+      a1 = animate(prev.el, 'translate3d(0,0,0)', 'translate3d(-28%,0,0)');
+      a2 = animate(view.el, 'translate3d(100%,0,0)', 'translate3d(0,0,0)');
+    } else {                                              // voltar (sai pela direita)
+      prev.el.style.zIndex = 10; prev.el.classList.add('raised');
+      $app.insertBefore(view.el, prev.el); mountSafe(view);
+      sh = shade(view.el, .25, 0);
+      a1 = animate(view.el, 'translate3d(-28%,0,0)', 'translate3d(0,0,0)');
+      a2 = animate(prev.el, 'translate3d(0,0,0)', 'translate3d(100%,0,0)');
     }
+    done = function () { view.el.style.zIndex = ''; cleanup(); };
+    busy = done;
+    a2.finished.then(function () { if (busy === done) finishBusy(); }, function () {});
+    setTimeout(function () { if (busy === done) finishBusy(); }, DUR + 300); // rede de segurança
   }
 
   /* ---------- eventos globais ---------- */
@@ -350,6 +359,7 @@
     if (rep) { e.preventDefault(); location.replace(rep.getAttribute('href')); }
   });
   window.addEventListener('hashchange', go);
+  window.addEventListener('pageshow', function (e) { if (e.persisted) { current = null; $app.innerHTML = ''; go(); } });
 
   applySettings();
   go();
