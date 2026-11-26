@@ -18,9 +18,9 @@ window.LIBRARY = [
   {
     id: 'mark',
     title: 'Mark - Spin OFF (O INICIO e o FIM)',
-    author: 'M4rk',
+    author: 'MARK',
     type: 'Mangá · Spin-off',
-    description: 'A história de um garoto brasileiro no futebol, contada no universo de Blue Lock.',
+    description: '',
     cover: 'images/mark/capa-obra.jpg',
     chapters: [
       {

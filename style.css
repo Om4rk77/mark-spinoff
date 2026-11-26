@@ -253,3 +253,18 @@ input[type="range"]::-moz-range-thumb { width: 28px; height: 28px; border: 0; bo
 }
 @media (max-width: 360px) { .grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px 12px; padding: 4px 14px 32px; } }
 :root[data-width="medium"] .pages, :root[data-width="large"] .pages { width: 100%; }
+
+.zoomable { display: block; width: 120px; flex: none; text-align: left; cursor: zoom-in; transition: transform .25s var(--ease); }
+.zoomable .cover { width: 100%; }
+.zoomable:active { transform: scale(.96); transition-duration: .08s; }
+@media (min-width: 900px) { .zoomable { width: 170px; } }
+#lightbox {
+  position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, .92); opacity: 0; pointer-events: none; transition: opacity .3s var(--ease); cursor: zoom-out;
+}
+#lightbox.open { opacity: 1; pointer-events: auto; }
+#lightbox img {
+  max-width: 100%; max-height: 100%; border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+  transform: scale(.88); transition: transform .45s var(--ease); will-change: transform;
+}
+#lightbox.open img { transform: scale(1); }

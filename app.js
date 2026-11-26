@@ -158,7 +158,7 @@
         : '<a class="btn-primary" href="#/obra/' + esc(w.id) + '/cap/' + esc(first.id) + '">Começar a ler</a>';
     }
     el.innerHTML = nav({ back: { href: '#/', label: 'Biblioteca' }, title: w.title }) +
-      '<section class="hero">' + coverHTML(coverOf(w), w.title) +
+      '<section class="hero"><button class="zoomable" data-zoom="' + esc(coverOf(w)) + '" aria-label="Ver capa">' + coverHTML(coverOf(w), w.title) + '</button>' +
         '<div class="hero-info"><div class="tag">' + esc(w.type || '') + '</div><h1>' + esc(w.title) + '</h1><div class="author">' + esc(w.author || '') + '</div></div>' +
       '</section>' +
       (w.description ? '<p class="synopsis">' + esc(w.description) + '</p>' : '') +
@@ -349,6 +349,8 @@
   document.addEventListener('click', function (e) {
     var t = e.target;
     if (t.closest('[data-settings]')) { openSheet(); return; }
+    var z = t.closest('[data-zoom]');
+    if (z) { openLB(z.getAttribute('data-zoom')); return; }
     var back = t.closest('[data-back]');
     if (back) {
       e.preventDefault();
@@ -358,6 +360,20 @@
     var rep = t.closest('[data-replace]');
     if (rep) { e.preventDefault(); location.replace(rep.getAttribute('href')); }
   });
+  /* ---------- ver capa em tela cheia ---------- */
+  var $lb = document.createElement('div');
+  $lb.id = 'lightbox'; $lb.innerHTML = '<img alt="Capa">';
+  document.body.appendChild($lb);
+  var $lbImg = $lb.querySelector('img');
+  function openLB(src) {
+    $lbImg.src = enc(src);
+    $lb.classList.add('open');
+  }
+  function closeLB() { $lb.classList.remove('open'); }
+  $lb.addEventListener('click', closeLB);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLB(); });
+  window.addEventListener('hashchange', closeLB);
+
   window.addEventListener('hashchange', go);
   window.addEventListener('pageshow', function (e) { if (e.persisted) { current = null; $app.innerHTML = ''; go(); } });
 
