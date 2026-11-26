@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Biblioteca</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app"></div>
+
+<!-- Painel de ajustes (folha que sobe, como no iOS) -->
+<div id="backdrop"></div>
+<div id="sheet" role="dialog" aria-modal="true" aria-label="Ajustes de leitura">
+  <div class="grabber-zone" id="grabber"><span class="grabber"></span></div>
+  <div class="sheet-head">
+    <h2>Leitura</h2>
+    <button class="sheet-done" id="sheet-done">OK</button>
+  </div>
+
+  <div class="sheet-body">
+    <p class="s-label">Aparência</p>
+    <div class="seg" data-seg="theme" style="--n:3">
+      <i class="thumb"></i>
+      <button data-val="auto">Automático</button>
+      <button data-val="light">Claro</button>
+      <button data-val="dark">Escuro</button>
+    </div>
+
+    <p class="s-label">Conforto para os olhos</p>
+    <div class="s-group">
+      <div class="s-row">
+        <span>Filtro de luz quente</span>
+        <label class="switch"><input type="checkbox" data-sw="eye"><span></span></label>
+      </div>
+      <div class="s-row s-slider">
+        <span class="s-ico">☀︎</span>
+        <input type="range" min="0" max="100" step="1" data-range="eyeLevel" aria-label="Intensidade do filtro">
+        <span class="s-ico">☾</span>
+      </div>
+    </div>
+    <p class="s-note">Deixa a tela mais amarelada e reduz a luz azul, que cansa menos a vista.</p>
+
+    <p class="s-label">Largura das páginas</p>
+    <div class="seg" data-seg="width" style="--n:3">
+      <i class="thumb"></i>
+      <button data-val="medium">Média</button>
+      <button data-val="large">Grande</button>
+      <button data-val="full">Total</button>
+    </div>
+
+    <div class="s-group" style="margin-top:20px">
+      <div class="s-row">
+        <span>Separar as páginas</span>
+        <label class="switch"><input type="checkbox" data-sw="gap"><span></span></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filtro de conforto ocular (cobre tudo, sem bloquear cliques) -->
+<div id="eye" aria-hidden="true"></div>
+
+<script src="content.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
