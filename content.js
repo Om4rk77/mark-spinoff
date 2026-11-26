@@ -28,7 +28,7 @@ window.LIBRARY = [
         number: 1,
         title: 'O Início nas Quadras',
         cover: 'images/mark/cap1/capa.jpg',
-        pages: seq('images/mark/cap1/', 7, 'jpg')
+        pages: seq('images/mark/cap1/', 7, 'jpg?v=5')
       }
     ]
   }
