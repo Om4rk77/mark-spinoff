@@ -12,7 +12,9 @@
     get: function (k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
     set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
-  var S = Object.assign({ theme: 'auto', eye: false, eyeLevel: 45, width: 'large', gap: true }, store.get('mk-settings', {}));
+  var S = Object.assign({ theme: 'dark', eye: false, eyeLevel: 45, width: 'large' }, store.get('mk-settings', {}));
+  if (S.theme !== 'light') S.theme = 'dark';
+  S.gap = true;
   var progress = store.get('mk-progress', {});
 
   /* ---------- utilidades ---------- */
@@ -29,6 +31,7 @@
   function allPages(c) { return (c.cover ? [c.cover] : []).concat(c.pages || []); }
 
   var ICON_BACK = '<svg width="12" height="20" viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2 2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ICON_ADJ = '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h9M18 6h3M3 12h3M12 12h9M3 18h11M20 18h1"/><circle cx="15" cy="6" r="2.4"/><circle cx="9" cy="12" r="2.4"/><circle cx="17" cy="18" r="2.4"/></svg>';
   var ICON_CHEV = '<svg class="chev" width="8" height="14" viewBox="0 0 8 14" aria-hidden="true"><path d="M1.5 1.5 7 7l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   /* ---------- ajustes (tema, filtro, largura) ---------- */
@@ -59,7 +62,6 @@
       seg.style.setProperty('--i', Math.max(0, i));
     });
     $sheet.querySelector('[data-sw="eye"]').checked = !!S.eye;
-    $sheet.querySelector('[data-sw="gap"]').checked = !!S.gap;
     var r = $sheet.querySelector('[data-range="eyeLevel"]');
     r.value = S.eyeLevel;
     r.closest('.s-row').classList.toggle('off', !S.eye);
@@ -74,7 +76,6 @@
     applySettings(); syncSheet();
   });
   $sheet.querySelector('[data-sw="eye"]').addEventListener('change', function (e) { S.eye = e.target.checked; applySettings(); syncSheet(); });
-  $sheet.querySelector('[data-sw="gap"]').addEventListener('change', function (e) { S.gap = e.target.checked; applySettings(); });
   $sheet.querySelector('[data-range="eyeLevel"]').addEventListener('input', function (e) { S.eyeLevel = +e.target.value; applySettings(); });
   document.getElementById('sheet-done').addEventListener('click', closeSheet);
   $backdrop.addEventListener('click', closeSheet);
@@ -103,7 +104,7 @@
     return '<header class="nav' + (opts.scrolled ? ' scrolled' : '') + '">' +
       '<div class="nav-left">' + (opts.back ? '<a class="nav-btn" href="' + opts.back.href + '" data-back="' + opts.back.href + '">' + ICON_BACK + '<span>' + esc(opts.back.label) + '</span></a>' : '') + '</div>' +
       '<div class="nav-title">' + esc(opts.title || '') + '</div>' +
-      '<div class="nav-right"><button class="nav-btn nav-aa" data-settings aria-label="Ajustes de leitura">Aa</button></div>' +
+      '<div class="nav-right"><button class="nav-btn nav-aa" data-settings aria-label="Ajustes de leitura">' + ICON_ADJ + '</button></div>' +
       (opts.progress ? '<div class="nav-progress"></div>' : '') +
     '</header>';
   }
