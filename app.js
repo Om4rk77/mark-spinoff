@@ -119,12 +119,14 @@
   // título que aparece na barra depois de rolar
   function collapseOnScroll(el, threshold) {
     var n = el.querySelector('.nav'), t = el.querySelector('.nav-title');
+    var tk = false;
     function upd() {
+      tk = false;
       var y = el.scrollTop;
       n.classList.toggle('scrolled', y > 4);
       t.style.opacity = clamp((y - threshold) / 24, 0, 1);
     }
-    el.addEventListener('scroll', upd, { passive: true });
+    el.addEventListener('scroll', function () { if (!tk) { tk = true; requestAnimationFrame(upd); } }, { passive: true });
     upd();
   }
 
@@ -207,40 +209,49 @@
         if (im.complete && im.naturalWidth) ok(); else { im.addEventListener('load', ok); im.addEventListener('error', function () { im.classList.add('ok'); }); }
       });
 
-      var lastY = 0, saveT = null;
-      function currentPage() {
-        var mid = el.scrollTop + el.clientHeight * 0.4, cur = 0;
-        for (var i = 0; i < figs.length; i++) { if (figs[i].offsetTop <= mid) cur = i; else break; }
+      var lastY = 0, saveT = null, tops = [], ticking = false, hidden = false, lastP = -1;
+      function measure() { tops = figs.map(function (f) { return f.offsetTop; }); }
+      measure();
+      figs.forEach(function (f) { f.querySelector('img').addEventListener('load', measure); });
+      window.addEventListener('resize', measure);
+      function currentPage(y) {
+        var mid = y + el.clientHeight * 0.4, lo = 0, hi = tops.length - 1, cur = 0;
+        while (lo <= hi) { var m = (lo + hi) >> 1; if (tops[m] <= mid) { cur = m; lo = m + 1; } else hi = m - 1; }
         return cur;
       }
       function label(i) { return c.cover ? (i === 0 ? 'Capa' : 'Pág. ' + i + ' / ' + (total - 1)) : 'Pág. ' + (i + 1) + ' / ' + total; }
-      function onScroll() {
+      function setHidden(h) { if (h !== hidden) { hidden = h; el.classList.toggle('hide-ui', h); } }
+      function frame() {
+        ticking = false;
         var y = el.scrollTop, max = el.scrollHeight - el.clientHeight;
         bar.style.setProperty('--p', max > 0 ? clamp(y / max, 0, 1).toFixed(4) : 0);
         if (total) {
-          var p = currentPage();
-          pill.textContent = label(p);
-          clearTimeout(saveT);
-          saveT = setTimeout(function () {
-            progress[w.id] = { chap: c.id };
-            progress[w.id + '/' + c.id] = p;
-            store.set('mk-progress', progress);
-          }, 400);
+          var p = currentPage(y);
+          if (p !== lastP) {
+            lastP = p; pill.textContent = label(p);
+            clearTimeout(saveT);
+            saveT = setTimeout(function () {
+              progress[w.id] = { chap: c.id };
+              progress[w.id + '/' + c.id] = p;
+              store.set('mk-progress', progress);
+            }, 400);
+          }
         }
-        if (y > lastY + 8 && y > 140) el.classList.add('hide-ui');
-        else if (y < lastY - 8 || y < 60) el.classList.remove('hide-ui');
+        if (y > lastY + 8 && y > 140) setHidden(true);
+        else if (y < lastY - 8 || y < 60) setHidden(false);
         lastY = y;
       }
+      function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }
       el.addEventListener('scroll', onScroll, { passive: true });
       el.addEventListener('click', function (e) {
         if (e.target.closest('a,button,.nav')) return;
-        el.classList.toggle('hide-ui');
+        setHidden(!hidden);
       });
 
       // volta para onde parou
       var saved = progress[w.id + '/' + c.id];
-      if (saved && saved > 0 && figs[saved]) requestAnimationFrame(function () { el.scrollTop = figs[saved].offsetTop; lastY = el.scrollTop; onScroll(); });
-      else onScroll();
+      if (saved && saved > 0 && figs[saved]) requestAnimationFrame(function () { measure(); el.scrollTop = tops[saved]; lastY = el.scrollTop; frame(); });
+      else frame();
     }
     return { el: el, mount: mount };
   }
@@ -267,7 +278,15 @@
     document.title = c ? w.title + ' · Cap. ' + c.number : w ? w.title : 'Biblioteca';
   }
   function run(el, frames, opts) {
-    return el.animate(frames, Object.assign({ duration: DUR, easing: EASE, fill: 'both' }, opts)).finished;
+    el.classList.add('anim');
+    return el.animate(frames, Object.assign({ duration: DUR, easing: EASE, fill: 'both' }, opts)).finished.then(function () { el.classList.remove('anim'); });
+  }
+  function dimOf(el) { var d = el.querySelector(':scope > .dim'); if (!d) { d = document.createElement('div'); d.className = 'dim'; el.appendChild(d); } return d; }
+  function slideUnder(el, from, to) {
+    var d = dimOf(el);
+    d.style.top = el.scrollTop + 'px'; d.style.height = el.clientHeight + 'px'; d.style.bottom = 'auto';
+    d.animate([{ opacity: from * .22 }, { opacity: to * .22 }], { duration: DUR, easing: EASE, fill: 'both' });
+    return run(el, [{ transform: 'translate3d(' + (-28 * from) + '%,0,0)' }, { transform: 'translate3d(' + (-28 * to) + '%,0,0)' }]);
   }
 
   function go() {
@@ -284,8 +303,8 @@
 
     if (r.depth > top.r.depth) {                       // avançar (push)
       stack.push(view); $app.appendChild(view.el); view.mount();
-      run(top.el, [{ transform: 'none', filter: 'brightness(1)' }, { transform: 'translateX(-28%)', filter: 'brightness(.78)' }]);
-      run(view.el, [{ transform: 'translateX(100%)' }, { transform: 'translateX(0)' }]).then(function () {
+      slideUnder(top.el, 0, 1);
+      run(view.el, [{ transform: 'translate3d(100%,0,0)' }, { transform: 'translate3d(0,0,0)' }]).then(function () {
         view.el.getAnimations().forEach(function (a) { a.cancel(); });
         top.el.getAnimations().forEach(function (a) { a.cancel(); });
         top.el.style.visibility = 'hidden';
@@ -299,11 +318,12 @@
       if (keep.indexOf(view) === -1) keep.push(view);
       stack = keep.concat(top);                         // top sai logo depois da animação
       view.el.style.visibility = '';
-      run(view.el, [{ transform: 'translateX(-28%)', filter: 'brightness(.78)' }, { transform: 'none', filter: 'brightness(1)' }]);
-      run(top.el, [{ transform: 'translateX(0)' }, { transform: 'translateX(100%)' }]).then(function () {
+      slideUnder(view.el, 1, 0);
+      run(top.el, [{ transform: 'translate3d(0,0,0)' }, { transform: 'translate3d(100%,0,0)' }]).then(function () {
         top.el.remove();
         stack = stack.filter(function (s) { return s !== top; });
         view.el.getAnimations().forEach(function (a) { a.cancel(); });
+        var d = view.el.querySelector(':scope > .dim'); if (d) d.getAnimations().forEach(function (a) { a.cancel(); });
       });
     } else {                                            // troca no mesmo nível (próximo capítulo)
       stack[stack.length - 1] = view;

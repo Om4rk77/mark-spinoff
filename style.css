@@ -52,8 +52,11 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .screen {
   position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
   background: var(--bg); overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch;
+  contain: layout paint; backface-visibility: hidden; transform: translateZ(0);
 }
-.screen.raised { box-shadow: -12px 0 32px rgba(0, 0, 0, .22); }
+.screen.anim { will-change: transform; }
+.screen .dim { position: absolute; inset: 0; z-index: 50; background: #000; opacity: 0; pointer-events: none; will-change: opacity; }
+.screen.raised { box-shadow: -8px 0 24px rgba(0, 0, 0, .18); }
 
 /* ---------- Barra de navegação ---------- */
 .nav {
@@ -86,7 +89,7 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .nav-aa { font-weight: 600; font-size: 17px; }
 .nav-progress {
   position: absolute; left: 0; bottom: 0; height: 2px; width: 100%;
-  background: var(--tint); transform-origin: 0 50%; transform: scaleX(var(--p, 0));
+  background: var(--tint); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); will-change: transform;
 }
 
 /* ---------- Biblioteca ---------- */
@@ -146,12 +149,12 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .empty { text-align: center; color: var(--label2); padding: 22px; font-size: 15px; }
 
 /* ---------- Leitor ---------- */
-.reader .nav { background: var(--bar); -webkit-backdrop-filter: saturate(180%) blur(22px); backdrop-filter: saturate(180%) blur(22px); }
+.reader .nav { background: var(--bg); will-change: transform; }
 .reader .nav::after { opacity: 1; }
 .reader .nav-title { opacity: 1; }
 .reader.hide-ui .nav { transform: translateY(-100%); }
 .pages { max-width: var(--pw); margin: 0 auto; display: flex; flex-direction: column; gap: var(--gap); transition: gap .3s var(--ease); }
-.pg { margin: 0; background: var(--card); position: relative; }
+.pg { margin: 0; background: var(--card); position: relative; content-visibility: auto; contain-intrinsic-size: auto 1500px; }
 .pg img { display: block; width: 100%; height: auto; opacity: 0; transition: opacity .35s; }
 .pg img.ok { opacity: 1; }
 .pg-empty { padding: 120px 28px; text-align: center; color: var(--label2); font-size: 16px; line-height: 1.5; }
@@ -162,10 +165,10 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .page-pill {
   position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 15;
   transform: translate(-50%, 0); padding: 8px 14px; border-radius: 999px;
-  background: var(--bar); -webkit-backdrop-filter: saturate(180%) blur(22px); backdrop-filter: saturate(180%) blur(22px);
+  background: var(--card);
   font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--label);
   box-shadow: 0 0 0 .5px var(--sep), 0 4px 16px rgba(0, 0, 0, .12);
-  transition: transform .35s var(--ease), opacity .25s; pointer-events: none;
+  transition: transform .35s var(--ease), opacity .25s; pointer-events: none; will-change: transform, opacity;
 }
 .reader.hide-ui .page-pill { transform: translate(-50%, 90px); opacity: 0; }
 
@@ -176,6 +179,7 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 }
 #backdrop.open { opacity: 1; pointer-events: auto; }
 #sheet {
+  will-change: transform;
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 1001; margin: 0 auto; max-width: 540px;
   background: var(--sheet); border-radius: 14px 14px 0 0; transform: translateY(105%);
   transition: transform .5s var(--ease); padding-bottom: calc(18px + env(safe-area-inset-bottom));
@@ -234,7 +238,7 @@ input[type="range"]::-moz-range-thumb { width: 28px; height: 28px; border: 0; bo
 /* ---------- Filtro de conforto ocular ---------- */
 #eye {
   position: fixed; inset: 0; z-index: 9999; pointer-events: none;
-  background: rgb(255, 160, 60); mix-blend-mode: multiply; opacity: 0; transition: opacity .4s;
+  background: rgb(255, 140, 30); opacity: 0; transition: opacity .4s; will-change: opacity; transform: translateZ(0);
 }
 
 @media (prefers-reduced-motion: reduce) {
