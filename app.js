@@ -166,11 +166,11 @@
       '<div class="section-h">' + w.chapters.length + (w.chapters.length === 1 ? ' capítulo' : ' capítulos') + '</div>' +
       '<div class="group">' + w.chapters.map(function (c) {
         var n = (c.pages || []).length;
-        var done = progress[w.id + '/' + c.id] != null;
+        var done = !!progress[w.id + '/' + c.id + '/lido'];
         return '<a class="row" href="#/obra/' + esc(w.id) + '/cap/' + esc(c.id) + '">' +
           '<div class="thumb">' + (c.cover ? '<img src="' + enc(c.cover) + '" alt="" loading="lazy" onerror="this.remove()">' : '') + '</div>' +
           '<div class="meta"><b>Capítulo ' + esc(c.number) + '</b><span>' + esc(c.title) + (n ? ' · ' + n + ' págs.' : '') + '</span></div>' +
-          (done ? '<span class="badge">Lido</span>' : '') + ICON_CHEV + '</a>';
+          '<span class="badge' + (done ? ' lido' : '') + '"><i></i>' + (done ? 'Lido' : 'Não lido') + '</span>' + ICON_CHEV + '</a>';
       }).join('') + '</div>';
     return { el: el, mount: function () { collapseOnScroll(el, 150); } };
   }
@@ -234,6 +234,7 @@
             saveT = setTimeout(function () {
               progress[w.id] = { chap: c.id };
               progress[w.id + '/' + c.id] = p;
+              if (p >= total - 1) progress[w.id + '/' + c.id + '/lido'] = 1;
               store.set('mk-progress', progress);
             }, 400);
           }

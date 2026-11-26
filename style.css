@@ -145,7 +145,9 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 .row .meta b { display: block; font-size: 17px; font-weight: 500; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row .meta span { font-size: 13px; color: var(--label2); }
 .row .chev { color: var(--label3); flex: none; }
-.row .badge { font-size: 13px; color: var(--tint); flex: none; }
+.row .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--label2); flex: none; white-space: nowrap; }
+.row .badge i { width: 8px; height: 8px; border-radius: 50%; background: #8e8e93; }
+.row .badge.lido i { background: #30d158; }
 .empty { text-align: center; color: var(--label2); padding: 22px; font-size: 15px; }
 
 /* ---------- Leitor ---------- */
