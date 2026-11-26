@@ -195,7 +195,7 @@
       body +
       '<section class="end-card"><h2>Fim do Capítulo ' + esc(c.number) + '</h2>' +
         (next ? '<p>Próximo: ' + esc(next.title) + '</p><a class="btn-primary" data-replace href="' + base + '/cap/' + esc(next.id) + '">Próximo capítulo</a>'
-              : '<p>Por enquanto é só. Novos capítulos em breve.</p>') +
+              : '') +
         (prev ? '<a class="btn-secondary" data-replace href="' + base + '/cap/' + esc(prev.id) + '">Capítulo anterior</a>' : '') +
         '<a class="btn-secondary" href="' + base + '" data-back="' + base + '">Voltar à obra</a>' +
       '</section>' +
