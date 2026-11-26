@@ -240,7 +240,7 @@ input[type="range"]::-moz-range-thumb { width: 28px; height: 28px; border: 0; bo
 /* ---------- Filtro de conforto ocular ---------- */
 #eye {
   position: fixed; inset: 0; z-index: 9999; pointer-events: none;
-  background: rgb(255, 140, 30); opacity: 0; transition: opacity .4s; will-change: opacity; transform: translateZ(0);
+  background: rgb(255, 170, 90); mix-blend-mode: multiply; opacity: 0; visibility: hidden; transition: opacity .4s, visibility 0s .4s;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -270,3 +270,5 @@ input[type="range"]::-moz-range-thumb { width: 28px; height: 28px; border: 0; bo
   transform: scale(.88); transition: transform .45s var(--ease); will-change: transform;
 }
 #lightbox.open img { transform: scale(1); }
+
+#eye.on { visibility: visible; transition: opacity .4s, visibility 0s; }

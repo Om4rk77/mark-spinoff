@@ -40,7 +40,8 @@
     if (S.theme === 'auto') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', S.theme);
     root.setAttribute('data-width', S.width);
     root.setAttribute('data-gap', S.gap ? 'on' : 'off');
-    $eye.style.opacity = S.eye ? (clamp(S.eyeLevel, 0, 100) / 100 * 0.6).toFixed(3) : 0;
+    $eye.classList.toggle('on', !!S.eye);
+    $eye.style.opacity = S.eye ? (0.15 + clamp(S.eyeLevel, 0, 100) / 100 * 0.6).toFixed(3) : 0;
     var dark = S.theme === 'dark' || (S.theme === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', dark ? '#000000' : '#f2f2f7');
